@@ -155,10 +155,11 @@ namespace MapReroll {
 			try {
 				MapRerollController.HasCavesOverride.HasCaves = Find.World.HasCaves(mapTile);
 				MapRerollController.HasCavesOverride.OverrideEnabled = true;
-				Find.World.info.seedString = seed;
+                MapGeneratorDef generatorDef = Find.Maps.Find(m => m.Tile == mapTile).generatorDef;
+                Find.World.info.seedString = seed;
 
 				MapRerollController.RandStateStackCheckingPaused = true;
-				var grids = GenerateMapGrids(mapTile, mapSize, revealCaves);
+				var grids = GenerateMapGrids(mapTile, mapSize, revealCaves, generatorDef);
 				DeepProfiler.Start("generateMapPreviewTexture");
 				const string terrainGenStepName = "Terrain";
 				var terrainGenStepDef = DefDatabase<GenStepDef>.GetNamedSilentFail(terrainGenStepName);
@@ -273,14 +274,14 @@ namespace MapReroll {
 		/// <summary>
 		/// Generate a minimal map with elevation and fertility grids
 		/// </summary>
-		private static MapGridSet GenerateMapGrids(int mapTile, int mapSize, bool revealCaves) {
+		private static MapGridSet GenerateMapGrids(int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef) {
 			DeepProfiler.Start("generateMapPreviewGrids");
 			try {
 				Rand.PushState();
 				var mapGeneratorData = (Dictionary<string, object>)ReflectionCache.MapGenerator_Data.GetValue(null);
 				mapGeneratorData.Clear();
 
-				var map = CreateMapStub(mapSize, mapTile);
+				var map = CreateMapStub(mapSize, mapTile, generatorDef);
 				MapGenerator.mapBeingGenerated = map;
 				
 				var mapSeed = Gen.HashCombineInt(Find.World.info.Seed, map.Tile);
@@ -308,18 +309,19 @@ namespace MapReroll {
 			}
 		}
 
-		/// <summary>
-		/// Make an absolute bare minimum map instance for grid generation.
-		/// </summary>
-		private static Map CreateMapStub(int mapSize, int mapTile) {
-			var parent = new MapParent {Tile = mapTile};
+        /// <summary>
+        /// Make an absolute bare minimum map instance for grid generation.
+        /// </summary>
+        private static Map CreateMapStub(int mapSize, int mapTile, MapGeneratorDef generatorDef) { 
+            var parent = new MapParent {Tile = mapTile};
 			var map = new Map {
 				info = {
 					parent = parent,
 					Size = new IntVec3(mapSize, 1, mapSize)
 				}
 			};
-			map.cellIndices = new CellIndices(map);
+            map.generatorDef = generatorDef;
+            map.cellIndices = new CellIndices(map);
 			map.floodFiller = new FloodFiller(map);
 			map.waterInfo = new WaterInfo(map);
 			return map;

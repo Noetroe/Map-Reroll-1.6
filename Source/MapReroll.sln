@@ -1,16 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32922.545
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapReroll", "MapReroll.csproj", "{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		1.4|Any CPU = 1.4|Any CPU
+		1.5|Any CPU = 1.5|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.1.4|Any CPU.ActiveCfg = 1.4|Any CPU
+		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.1.4|Any CPU.Build.0 = 1.4|Any CPU
+		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.1.5|Any CPU.ActiveCfg = 1.5|Any CPU
+		{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}.1.5|Any CPU.Build.0 = 1.5|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {99A1D70D-9B17-42B2-B23E-293725580927}
 	EndGlobalSection
 EndGlobal

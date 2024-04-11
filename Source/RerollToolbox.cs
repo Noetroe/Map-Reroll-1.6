@@ -298,7 +298,7 @@ namespace MapReroll {
 			map.tooltipGiverList.Notify_ThingDespawned(res);
 			if (res.def.graphicData != null && res.def.graphicData.Linked) {
 				map.linkGrid.Notify_LinkerCreatedOrDestroyed(res);
-				map.mapDrawer.MapMeshDirty(res.Position, MapMeshFlag.Things, true, false);
+				map.mapDrawer.MapMeshDirty(res.Position, MapMeshFlagDefOf.Things, true, false);
 			}
 			Find.Selector.Deselect(res);
 			res.DirtyMapMesh(map);
@@ -314,8 +314,8 @@ namespace MapReroll {
 			if (res.def.IsEdifice()) map.edificeGrid.DeRegister(b);
 			var sustainer = (Sustainer)ReflectionCache.Building_SustainerAmbient.GetValue(res);
 			if (sustainer != null) sustainer.End();
-			map.mapDrawer.MapMeshDirty(b.Position, MapMeshFlag.Buildings);
-			map.glowGrid.MarkGlowGridDirty(b.Position);
+			map.mapDrawer.MapMeshDirty(b.Position, MapMeshFlagDefOf.Buildings);
+			map.glowGrid.DirtyCache(b.Position);
 			map.listerBuildings.Remove((Building)res);
 			map.listerBuildingsRepairable.Notify_BuildingDeSpawned(b);
 			map.designationManager.Notify_BuildingDespawned(b);
@@ -485,7 +485,7 @@ namespace MapReroll {
 		}
 
 		private static void DiscardFactionBase(MapParent mapParent) {
-			Current.Game.DeinitAndRemoveMap(mapParent.Map);
+			Current.Game.DeinitAndRemoveMap(mapParent.Map, false);
 			Find.WorldObjects.Remove(mapParent);
 		}
 		

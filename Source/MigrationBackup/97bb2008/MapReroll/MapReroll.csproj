@@ -9,23 +9,53 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MapReroll</RootNamespace>
     <AssemblyName>MapReroll</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <LangVersion>8.0</LangVersion>
+    <TargetFrameworkVersion>4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>Mods\MapReroll\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>Mods\MapReroll\v1.3\Assemblies\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4|AnyCPU'">
-    <OutputPath>..\1.4\Assemblies\</OutputPath>
+    <OutputPath>bin\1.4\</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5|AnyCPU'">
     <OutputPath>..\1.5\Assemblies\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="0Harmony, Version=2.3.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Lib.Harmony.2.3.3\lib\net472\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="HugsLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\UnlimitedHugs.Rimworld.HugsLib.11.0.3\lib\net472\HugsLib.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.InteropServices.RuntimeInformation" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -66,15 +96,7 @@
     <Compile Include="UI\Widget_ResourceBalance.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Krafs.Rimworld.Ref">
-      <Version>1.5.4061</Version>
-    </PackageReference>
-    <PackageReference Include="Lib.Harmony">
-      <Version>2.3.3</Version>
-    </PackageReference>
-    <PackageReference Include="UnlimitedHugs.Rimworld.HugsLib">
-      <Version>11.0.3</Version>
-    </PackageReference>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
