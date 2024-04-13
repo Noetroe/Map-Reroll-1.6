@@ -525,7 +525,7 @@ namespace MapReroll {
 		}
 
 		private static IEnumerable<Pawn> GetAllColonistsOnMap(Map map) {
-			return GetAllPlayerPawnsOnMap(map).Where(p => p.IsColonist);
+			return GetAllPlayerPawnsOnMap(map).Where(p => p.IsColonist || (p.IsGhoul && p.Faction.IsPlayer));
 		}
 
 		private static void DespawnThings(IEnumerable<Thing> things, Map referenceMap) {
