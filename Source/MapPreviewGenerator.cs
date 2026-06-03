@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using HugsLib;
+using MapReroll.Compat;
 using MapReroll.Promises;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
 using Verse;
+using Verse.AI;
 
 namespace MapReroll {
 	/// <summary>
 	/// Given a map location and seed, generates an approximate preview texture of how the map would look once generated.
 	/// </summary>
 	public class MapPreviewGenerator : IDisposable {
-		private delegate TerrainDef BeachMakerBeachTerrainAt(IntVec3 c, BiomeDef biome);
-		private delegate TerrainDef RiverMakerTerrainAt(IntVec3 c, bool recordForValidation);
-
 		private static readonly Color defaultTerrainColor = GenColor.FromHex("6D5B49");
 		private static readonly Color missingTerrainColor = new Color(0.38f, 0.38f, 0.38f);
 		private static readonly Color solidStoneColor = GenColor.FromHex("36271C");
@@ -50,18 +50,26 @@ namespace MapReroll {
 		private EventWaitHandle mainThreadHandle = new AutoResetEvent(false);
 		private bool disposed;
 
-		public IPromise<Texture2D> QueuePreviewForSeed(string seed, int mapTile, int mapSize, bool revealCaves) {
+		public IPromise<Texture2D> QueuePreviewForSeed(string seed, int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef = null) {
 			if (disposeHandle == null) {
 				throw new Exception("MapPreviewGenerator has already been disposed.");
 			}
 			var promise = new Promise<Texture2D>();
+			generatorDef = generatorDef ?? Find.Maps.Find(m => m.Tile == mapTile)?.generatorDef ?? MapGeneratorDefOf.Base_Player;
+			if (Compat_MapPreview.TryQueuePreviewForSeed(seed, mapTile, mapSize, generatorDef, promise, () => QueueLocalPreview(promise, seed, mapTile, mapSize, revealCaves))) {
+				return promise;
+			}
+			QueueLocalPreview(promise, seed, mapTile, mapSize, revealCaves);
+			return promise;
+		}
+
+		private void QueueLocalPreview(Promise<Texture2D> promise, string seed, int mapTile, int mapSize, bool revealCaves) {
 			if (workerThread == null) {
 				workerThread = new Thread(DoThreadWork);
 				workerThread.Start();
 			}
 			queuedRequests.Enqueue(new QueuedPreviewRequest(promise, seed, mapTile, mapSize, revealCaves));
 			workHandle.Set();
-			return promise;
 		}
 
 		private void DoThreadWork() {
@@ -133,7 +141,7 @@ namespace MapReroll {
 		/// The worker cannot be aborted- wait for the worker to complete before generating map
 		/// </summary>
 		public void WaitForDisposal() {
-			if (!disposed || !workerThread.IsAlive || workerThread.ThreadState == ThreadState.WaitSleepJoin) return;
+			if (!disposed || workerThread == null || !workerThread.IsAlive || workerThread.ThreadState == ThreadState.WaitSleepJoin) return;
 			LongEventHandler.QueueLongEvent(() => workerThread.Join(60 * 1000), "Reroll2_finishingPreview", true, null);
 		}
 
@@ -156,31 +164,20 @@ namespace MapReroll {
 				MapRerollController.HasCavesOverride.HasCaves = Find.World.HasCaves(mapTile);
 				MapRerollController.HasCavesOverride.OverrideEnabled = true;
                 MapGeneratorDef generatorDef = Find.Maps.Find(m => m.Tile == mapTile).generatorDef;
-                Find.World.info.seedString = seed;
+				Find.World.info.seedString = seed;
 
 				MapRerollController.RandStateStackCheckingPaused = true;
 				var grids = GenerateMapGrids(mapTile, mapSize, revealCaves, generatorDef);
-				DeepProfiler.Start("generateMapPreviewTexture");
-				const string terrainGenStepName = "Terrain";
-				var terrainGenStepDef = DefDatabase<GenStepDef>.GetNamedSilentFail(terrainGenStepName);
-				if (terrainGenStepDef == null) throw new Exception("Named GenStepDef not found: " + terrainGenStepName);
-				var terrainGenstep = terrainGenStepDef.genStep;
-				var riverMaker = ReflectionCache.GenStepTerrain_GenerateRiver.Invoke(terrainGenstep, new object[] {grids.Map});
-				var beachTerrainAtDelegate = (BeachMakerBeachTerrainAt)Delegate.CreateDelegate(typeof(BeachMakerBeachTerrainAt), null, ReflectionCache.BeachMaker_BeachTerrainAt);
-				var riverTerrainAtDelegate = riverMaker == null ? null
-					: (RiverMakerTerrainAt)Delegate.CreateDelegate(typeof(RiverMakerTerrainAt), riverMaker, ReflectionCache.RiverMaker_TerrainAt);
-				ReflectionCache.BeachMaker_Init.Invoke(null, new object[] {grids.Map});
-
 				var mapBounds = CellRect.WholeMap(grids.Map);
 				foreach (var cell in mapBounds) {
 					const float rockCutoff = .7f;
-					var terrainDef = TerrainFrom(cell, grids.Map, grids.ElevationGrid[cell], grids.FertilityGrid[cell], riverTerrainAtDelegate, beachTerrainAtDelegate, false);
+					var terrainDef = grids.Map.terrainGrid.TerrainAt(cell);
 					if (!terrainColors.TryGetValue(terrainDef.defName, out Color pixelColor)) {
 						pixelColor = missingTerrainColor;
 					}
-					if (grids.ElevationGrid[cell] > rockCutoff && !terrainDef.IsRiver) {
+					if (grids.ElevationGrid[cell] > rockCutoff && !terrainDef.IsRiver && !terrainDef.IsWater) {
 						pixelColor = solidStoneColor;
-						if (grids.CavesGrid[cell] > 0) {
+						if (revealCaves && grids.CavesGrid[cell] > 0) {
 							pixelColor = caveColor;
 						}
 					}
@@ -196,58 +193,10 @@ namespace MapReroll {
 				MapRerollController.Instance.Logger.ReportException(e, null, false, "preview generation");
 			} finally {
 				RockNoises.Reset();
-				DeepProfiler.End();
 				Find.World.info.seedString = prevSeed;
 				MapRerollController.RandStateStackCheckingPaused = false;
 				MapRerollController.HasCavesOverride.OverrideEnabled = false;
-				try {
-					ReflectionCache.BeachMaker_Cleanup.Invoke(null, null);
-				} catch (Exception e) {
-					MapRerollController.Instance.Logger.ReportException(e, null, false, "BeachMaker preview cleanup");
-				}
 			}
-		}
-
-		/// <summary>
-		/// Identifies the terrain def that would have been used at the given map location.
-		/// Swiped from GenStep_Terrain. Extracted for performance reasons.
-		/// </summary>
-		private static TerrainDef TerrainFrom(IntVec3 c, Map map, float elevation, float fertility, RiverMakerTerrainAt riverTerrainAt, BeachMakerBeachTerrainAt beachTerrainAt, bool preferSolid) {
-			TerrainDef terrainDef = null;
-			if (riverTerrainAt != null) {
-				terrainDef = riverTerrainAt(c, true);
-			}
-			TerrainDef result;
-			if (terrainDef == null && preferSolid) {
-				result = GenStep_RocksFromGrid.RockDefAt(c).building.naturalTerrain;
-			} else {
-				var terrain = beachTerrainAt(c, map.Biome);
-				if (terrain == TerrainDefOf.WaterOceanDeep) {
-					result = terrain;
-				} else if (terrainDef != null && terrainDef.IsRiver) {
-					result = terrainDef;
-				} else if (terrain != null) {
-					result = terrain;
-				} else if (terrainDef != null) {
-					result = terrainDef;
-				} else {
-					for (int i = 0; i < map.Biome.terrainPatchMakers.Count; i++) {
-						terrain = map.Biome.terrainPatchMakers[i].TerrainAt(c, map, fertility);
-						if (terrain != null) {
-							return terrain;
-						}
-					}
-					if (elevation > 0.55f && elevation < 0.61f) {
-						result = TerrainDefOf.Gravel;
-					} else if (elevation >= 0.61f) {
-						result = GenStep_RocksFromGrid.RockDefAt(c).building.naturalTerrain;
-					} else {
-						terrain = TerrainThreshold.TerrainAtValue(map.Biome.terrainsByFertility, fertility);
-						result = terrain ?? TerrainDefOf.Sand;
-					}
-				}
-			}
-			return result;
 		}
 
 		/// <summary>
@@ -275,7 +224,6 @@ namespace MapReroll {
 		/// Generate a minimal map with elevation and fertility grids
 		/// </summary>
 		private static MapGridSet GenerateMapGrids(int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef) {
-			DeepProfiler.Start("generateMapPreviewGrids");
 			try {
 				Rand.PushState();
 				var mapGeneratorData = (Dictionary<string, object>)ReflectionCache.MapGenerator_Data.GetValue(null);
@@ -284,18 +232,23 @@ namespace MapReroll {
 				var map = CreateMapStub(mapSize, mapTile, generatorDef);
 				MapGenerator.mapBeingGenerated = map;
 				
-				var mapSeed = Gen.HashCombineInt(Find.World.info.Seed, map.Tile);
+				var mapSeed = Gen.HashCombineInt(Find.World.info.Seed, map.Tile.GetHashCode());
 				Rand.Seed = mapSeed;
 				RockNoises.Init(map);
+				foreach (var mutator in map.TileInfo.Mutators) {
+					mutator.Worker?.Init(map);
+				}
 
-				var elevationFertilityGenstep = new GenStep_ElevationFertility();
-				Rand.Seed = Gen.HashCombineInt(mapSeed, elevationFertilityGenstep.SeedPart);
-				elevationFertilityGenstep.Generate(map, new GenStepParams());
-
-				if (revealCaves) {
-					var cavesGenstep = new GenStep_Caves();
-					Rand.Seed = Gen.HashCombineInt(mapSeed, cavesGenstep.SeedPart);
-					cavesGenstep.Generate(map, new GenStepParams());
+				var genSteps = GetOrderedGenStepsFor(map, generatorDef);
+				for (int i = 0; i < genSteps.Count; i++) {
+					if (!IsPreviewTerrainGenStep(genSteps[i].def.genStep)) continue;
+					Rand.PushState();
+					try {
+						Rand.Seed = Gen.HashCombineInt(mapSeed, GetSeedPart(genSteps, i));
+						genSteps[i].def.genStep.Generate(map, genSteps[i].parms);
+					} finally {
+						Rand.PopState();
+					}
 				}
 
 				var result = new MapGridSet(MapGenerator.Elevation, MapGenerator.Fertility, MapGenerator.Caves, map);
@@ -303,10 +256,67 @@ namespace MapReroll {
 
 				return result;
 			} finally {
-				DeepProfiler.End();
 				MapGenerator.mapBeingGenerated = null;
-				Rand.PopState();
+				try {
+					Rand.PopState();
+				} catch (InvalidOperationException e) {
+					MapRerollController.Instance.Logger.Warning("Preview generation Rand stack was already empty: " + e.Message);
+				}
 			}
+		}
+
+		private static List<GenStepWithParams> GetOrderedGenStepsFor(Map map, MapGeneratorDef generatorDef) {
+			var genSteps = generatorDef.genSteps.Where(IsValidBiome).Select(GetGenStepParams);
+			foreach (var mutator in map.TileInfo.Mutators) {
+				if (mutator.extraGenSteps.Any()) {
+					genSteps = genSteps.Concat(mutator.extraGenSteps.Select(GetGenStepParams));
+				}
+			}
+			if (map.Biome.extraGenSteps.Any()) {
+				genSteps = genSteps.Concat(map.Biome.extraGenSteps.Where(IsValidBiome).Select(GetGenStepParams));
+			}
+			if (map.Biome.preventGenSteps.Any()) {
+				genSteps = genSteps.Where(step => !map.Biome.preventGenSteps.Contains(step.def));
+			}
+			foreach (var mutator in map.TileInfo.Mutators) {
+				if (mutator.preventGenSteps.Any()) {
+					genSteps = genSteps.Where(step => !mutator.preventGenSteps.Contains(step.def));
+				}
+			}
+			var orderedGenSteps = genSteps.Distinct()
+				.OrderBy(step => step.def.order)
+				.ThenBy(step => step.def.index)
+				.ToList();
+			orderedGenSteps.RemoveAll(a => orderedGenSteps.Any(b => b.def.preventsGenSteps != null && b.def.preventsGenSteps.Contains(a.def)));
+			return orderedGenSteps;
+		}
+
+		private static GenStepWithParams GetGenStepParams(GenStepDef def) {
+			return new GenStepWithParams(def, default(GenStepParams));
+		}
+
+		private static bool IsValidBiome(GenStepDef genStepDef) {
+			return !Find.Scenario.AllParts.Any(p =>
+				typeof(ScenPart_DisableMapGen).IsAssignableFrom(p.def.scenPartClass) &&
+				p.def.genStep == genStepDef);
+		}
+
+		private static bool IsPreviewTerrainGenStep(GenStep genStep) {
+			return genStep is GenStep_ElevationFertility ||
+				genStep is GenStep_MutatorPostElevationFertility ||
+				genStep is GenStep_Terrain ||
+				genStep is GenStep_MutatorPostTerrain;
+		}
+
+		private static int GetSeedPart(List<GenStepWithParams> genSteps, int index) {
+			var seedPart = genSteps[index].def.genStep.SeedPart;
+			var duplicateOffset = 0;
+			for (int i = 0; i < index; i++) {
+				if (genSteps[i].def.genStep.SeedPart == seedPart) {
+					duplicateOffset++;
+				}
+			}
+			return seedPart + duplicateOffset;
 		}
 
         /// <summary>
@@ -321,9 +331,29 @@ namespace MapReroll {
 				}
 			};
             map.generatorDef = generatorDef;
+			map.events = new MapEvents(map);
+			map.components.Add(new MixedBiomeMapComponent(map));
             map.cellIndices = new CellIndices(map);
 			map.floodFiller = new FloodFiller(map);
 			map.waterInfo = new WaterInfo(map);
+			map.thingGrid = new ThingGrid(map);
+			map.edificeGrid = new EdificeGrid(map);
+			map.terrainGrid = new TerrainGrid(map);
+			map.roofGrid = new RoofGrid(map);
+			map.mapDrawer = new MapDrawer(map);
+			map.regionGrid = new RegionGrid(map);
+			map.reachability = new Reachability(map);
+			map.regionDirtyer = new RegionDirtyer(map);
+			map.glowGrid = new GlowGrid(map);
+			map.snowGrid = new SnowGrid(map);
+			map.fertilityGrid = new FertilityGrid(map);
+			map.designationManager = new DesignationManager(map);
+			map.pathing = new Pathing(map);
+			if (ModsConfig.OdysseyActive) {
+				map.sandGrid = new SandGrid(map);
+				map.substructureGrid = new SubstructureGrid(map);
+				map.waterBodyTracker = new WaterBodyTracker(map);
+			}
 			return map;
 		}
 

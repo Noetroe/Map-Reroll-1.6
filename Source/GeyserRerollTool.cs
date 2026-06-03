@@ -31,28 +31,28 @@ namespace MapReroll {
 			}
 		}
 
-		public void DoReroll() {
+		public bool DoReroll() {
 			var map = Find.CurrentMap;
 			var logger = MapRerollController.Instance.Logger;
 			if (RerollInProgress) {
 				logger.Error("Cannot reroll geysers- reroll already in progress");
-				return;
+				return false;
 			}
 			if (map == null) {
 				logger.Error("No visible map- cannot reroll geysers");
-				return;
+				return false;
 			}
 			var state = RerollToolbox.GetStateForMap(map);
-			if (state.UsedMapGenerator == null) {
+			var mapGenerator = ResolveMapGenerator(map, state);
+			if (mapGenerator == null) {
 				logger.Error($"Cannot reroll geysers: map {map} does not have a recorded MapGeneratorDef");
-				return;
+				return false;
 			}
 			var geyserDef = ThingDefOf.SteamGeyser;
-			var genStepDef = state.UsedMapGenerator.genSteps.FirstOrDefault(g =>
-					(g.genStep as GenStep_ScatterThings)?.thingDef == geyserDef);
+			var genStepDef = FindGeyserGenStep(mapGenerator, geyserDef) ?? FindGeyserGenStep(MapGeneratorDefOf.Base_Player, geyserDef);
 			if (genStepDef == null) {
-				logger.Error($"Cannot reroll geysers: map generator {state.UsedMapGenerator} does not have a geyser GenStep");
-				return;
+				logger.Error($"Cannot reroll geysers: map generator {mapGenerator} does not have a geyser GenStep");
+				return false;
 			}
 			drawnArrows.Clear();
 			activeSteamEffects.Clear();
@@ -61,6 +61,22 @@ namespace MapReroll {
 			genStepDef.genStep.Generate(map, new GenStepParams());
 			var newGeysers = map.listerThings.AllThings.Where(t => t.def == geyserDef).Except(oldGeysers);
 			BeginGeyserSpawning(oldGeysers, newGeysers, map);
+			return true;
+		}
+
+		private static MapGeneratorDef ResolveMapGenerator(Map map, RerollMapState state) {
+			var mapGenerator = state.UsedMapGenerator ?? map.generatorDef ?? MapGeneratorDefOf.Base_Player;
+			if (state.UsedMapGenerator == null && mapGenerator != null) {
+				state.UsedMapGenerator = mapGenerator;
+			}
+			return mapGenerator;
+		}
+
+		private static GenStepDef FindGeyserGenStep(MapGeneratorDef mapGenerator, ThingDef geyserDef) {
+			if (mapGenerator?.genSteps == null) return null;
+			return mapGenerator.genSteps.FirstOrDefault(g =>
+				g.genStep is GenStep_ScatterGeysers ||
+				(g.genStep as GenStep_ScatterThings)?.thingDef == geyserDef);
 		}
 
 		private void BeginGeyserSpawning(IEnumerable<Thing> oldGeysers, IEnumerable<Thing> newGeysers, Map map) {

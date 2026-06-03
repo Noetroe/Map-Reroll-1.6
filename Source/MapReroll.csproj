@@ -1,91 +1,22 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A92FBAAF-E4F7-42E8-AED9-A372EE9AE89E}</ProjectGuid>
+    <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MapReroll</RootNamespace>
     <AssemblyName>MapReroll</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <RootNamespace>MapReroll</RootNamespace>
     <LangVersion>8.0</LangVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4|AnyCPU'">
-    <OutputPath>..\1.4\Assemblies\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5|AnyCPU'">
-    <OutputPath>..\1.5\Assemblies\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\1.6\Assemblies\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
+    <Compile Remove="obj\**\*.cs" />
+    <Compile Remove="MigrationBackup\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Compat\Compat_ConfigurableMaps.cs" />
-    <Compile Include="Compat\Compat_PrepareCarefully.cs" />
-    <Compile Include="GeyserRerollTool.cs" />
-    <Compile Include="GUIStateContext.cs" />
-    <Compile Include="Interpolation\InterpolationCurves.cs" />
-    <Compile Include="Interpolation\ValueInterpolator.cs" />
-    <Compile Include="StarterPossesions.cs" />
-    <Compile Include="MapComponent_MapRerollState.cs" />
-    <Compile Include="MapPreviewGenerator.cs" />
-    <Compile Include="Patches\ActiveDropPod_PodOpen_Patch.cs" />
-    <Compile Include="Patches\CaravanEnterMapUtility_Enter_Patch.cs" />
-    <Compile Include="Patches\DeterministicGenerationPatcher.cs" />
-    <Compile Include="Patches\MapGenerator_GenerateMap_Patch.cs" />
-    <Compile Include="Patches\Rand_EnsureStateStackEmpty_Patch.cs" />
-    <Compile Include="Patches\World_HasCaves_Patch.cs" />
-    <Compile Include="Promises\EnumerableExt.cs" />
-    <Compile Include="Promises\IPromise.cs" />
-    <Compile Include="Promises\Promise.cs" />
-    <Compile Include="MapRerollUtility.cs" />
-    <Compile Include="RerollMapState.cs" />
-    <Compile Include="ReflectionCache.cs" />
-    <Compile Include="RerollSettingsDef.cs" />
-    <Compile Include="RerollToolbox.cs" />
-    <Compile Include="RerollWorldState.cs" />
-    <Compile Include="Resources.cs" />
-    <Compile Include="UI\BasePreviewPageProvider.cs" />
-    <Compile Include="UI\Dialog_MapPreviews.cs" />
-    <Compile Include="UI\Dialog_RerollControls.cs" />
-    <Compile Include="UI\GeneratedPreviewPageProvider.cs" />
-    <Compile Include="UI\ListPreviewPageProvider.cs" />
-    <Compile Include="UI\MapRerollUIController.cs" />
-    <Compile Include="MapRerollController.cs" />
-    <Compile Include="UI\Widget_MapPreview.cs" />
-    <Compile Include="UI\Widget_RerollPreloader.cs" />
-    <Compile Include="UI\Widget_ResourceBalance.cs" />
+    <PackageReference Include="Krafs.Rimworld.Ref" Version="1.6.4633" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Lib.Harmony" Version="2.3.6" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="UnlimitedHugs.Rimworld.HugsLib" Version="12.0.0" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net472" Version="1.0.3" PrivateAssets="all" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Krafs.Rimworld.Ref">
-      <Version>1.5.4061</Version>
-    </PackageReference>
-    <PackageReference Include="Lib.Harmony">
-      <Version>2.3.3</Version>
-    </PackageReference>
-    <PackageReference Include="UnlimitedHugs.Rimworld.HugsLib">
-      <Version>11.0.3</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

@@ -19,6 +19,7 @@ namespace MapReroll.UI {
 		private Texture2D previewTex;
 		private Rect zoomedOutRect;
 		private bool zoomedIn;
+		private bool disposed;
 
 		public string Seed {
 			get { return seed; }
@@ -58,6 +59,7 @@ namespace MapReroll.UI {
 		}
 
 		public void Dispose() {
+			disposed = true;
 			UnityEngine.Object.Destroy(previewTex);
 			previewTex = null;
 		}
@@ -128,6 +130,10 @@ namespace MapReroll.UI {
 		}
 
 		private void OnPromiseResolved(Texture2D tex) {
+			if (disposed) {
+				UnityEngine.Object.Destroy(tex);
+				return;
+			}
 			previewTex = tex;
 			spawnInterpolator.value = 0f;
 			spawnInterpolator.StartInterpolation(1f, SpawnInterpolationDuration, CurveType.CubicOut);

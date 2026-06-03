@@ -1,0 +1,79 @@
+[h1]Map Reroll (1.4/1.5/1.6)[/h1]
+
+This update brings Map Reroll forward for RimWorld 1.6 while keeping support folders for 1.4 and 1.5.
+
+Map Reroll lets you quickly randomize your starting map and steam geyser locations. Your starting scenario, colonists, items, and settlement setup stay the same.
+
+The mod includes map previews, so instead of blindly rolling random maps, you can browse preview pages and choose the map you want.
+
+[hr][/hr]
+
+[h1]Features[/h1]
+
+[list]
+[*]Reroll the current starting map from an in-game preview grid.
+[*]Reroll steam geyser locations.
+[*]Keep your scenario, colonists, and starting items intact.
+[*]Optional resource cost paid from unmined map resources.
+[*]RimWorld 1.6 compatibility fixes.
+[*]Optional integration with Map Preview for more accurate 1.6 previews.
+[/list]
+
+[hr][/hr]
+
+[h1]Requirements[/h1]
+
+[list]
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=818773962]HugsLib[/url] is required.
+[*]Load HugsLib before Map Reroll.
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2800857642]Map Preview[/url] is optional, but recommended for the best preview accuracy on RimWorld 1.6.
+[*]If using Map Preview, load it before Map Reroll.
+[/list]
+
+Suggested load order:
+
+[code]
+HugsLib
+Map Preview (optional)
+Map Reroll
+[/code]
+
+[hr][/hr]
+
+[h1]Resource Cost[/h1]
+
+Rerolling has a small price: unmined resources from the map.
+
+This cost is optional and can be disabled in:
+
+[code]
+Options > Mod Settings
+[/code]
+
+[hr][/hr]
+
+[h1]Warning[/h1]
+
+Use your best judgment when rerolling and save your game first.
+
+Map generation is one of RimWorld's more sensitive systems. This mod has been updated and tested around vanilla-style generation, but mods that add or change map generation may behave unexpectedly.
+
+[hr][/hr]
+
+[h1]Legacy Versions[/h1]
+
+The older pre-1.4 version is available here:
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=761315214]Map Reroll[/url]
+
+The B19 version is available here:
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=1535871514]Map Reroll (B19)[/url]
+
+[hr][/hr]
+
+Source code:
+[url=https://github.com/Noetroe/Map-Reroll-1.6]https://github.com/Noetroe/Map-Reroll-1.6[/url]
+
+Original Workshop item:
+[url=https://steamcommunity.com/sharedfiles/filedetails/?id=2915575236]Map Reroll (1.4/1.5)[/url]
+
+Hope you enjoy.

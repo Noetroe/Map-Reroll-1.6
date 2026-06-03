@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using HugsLib;
+using MapReroll.Compat;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -312,10 +313,12 @@ namespace MapReroll {
 			// building-specific cleanup
 			var b = (Building)res;
 			if (res.def.IsEdifice()) map.edificeGrid.DeRegister(b);
-			var sustainer = (Sustainer)ReflectionCache.Building_SustainerAmbient.GetValue(res);
-			if (sustainer != null) sustainer.End();
+			var sustainer = ReflectionCache.Building_SustainerAmbient == null
+				? null
+				: (Sustainer)ReflectionCache.Building_SustainerAmbient.GetValue(res);
+			sustainer?.End();
 			map.mapDrawer.MapMeshDirty(b.Position, MapMeshFlagDefOf.Buildings);
-			map.glowGrid.DirtyCache(b.Position);
+			map.glowGrid.DirtyCell(b.Position);
 			map.listerBuildings.Remove((Building)res);
 			map.listerBuildingsRepairable.Notify_BuildingDeSpawned(b);
 			map.designationManager.Notify_BuildingDespawned(b);
@@ -403,7 +406,7 @@ namespace MapReroll {
 		// clears references to map components so that they may be garbage-collected even if the map itself isn't
 		private static void StripMap(Map map) {
 			map.spawnedThings = null;
-			map.cellIndices = null;
+			map.cellIndices = default;
 			map.listerThings = null;
 			map.listerBuildings = null;
 			map.mapPawns = null;
@@ -423,7 +426,7 @@ namespace MapReroll {
 			map.zoneManager = null;
 			map.resourceCounter = null;
 			map.mapTemperature = null;
-			map.temperatureCache = null;
+			map.TemperatureVacuumCache = null;
 			map.areaManager = null;
 			map.attackTargetsCache = null;
 			map.attackTargetReservationManager = null;
@@ -443,7 +446,6 @@ namespace MapReroll {
 			map.deepResourceGrid = null;
 			map.exitMapGrid = null;
 			map.linkGrid = null;
-			map.glowFlooder = null;
 			map.powerNetManager = null;
 			map.powerNetGrid = null;
 			map.regionMaker = null;
@@ -496,6 +498,7 @@ namespace MapReroll {
 
 		private static Map GenerateNewMapWithSeed(MapParent mapParent, IntVec3 size, string seed, WorldObjectDef worldObjectDef) {
 			var prevSeed = Find.World.info.seedString;
+			Compat_MapPreview.CommitMapSeedForReroll(seed, mapParent.Tile);
 			Find.World.info.seedString = seed;
             Map newMap = GetOrGenerateMapUtility.GetOrGenerateMap(mapParent.Tile, size, worldObjectDef);
             //if (worldObjectDef == WorldObjectDefOf.AbandonedArchotechStructures)

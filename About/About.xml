@@ -1,13 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-	<name>Map Reroll (1.4/1.5)</name>
+	<name>Map Reroll (1.4/1.5/1.6)</name>
 	<author>UnlimitedHugs and TheRealLemon</author>
 	<supportedVersions>
 		<li>1.4</li>
 		<li>1.5</li>
+		<li>1.6</li>
 	</supportedVersions>
 	<packageId>TheRealLemon.MapReroll</packageId>
-	<description>Version: 2.8.3
+	<description>Version: 2.8.5-rw1.6
 	
 &lt;size=20&gt;Description&lt;/size&gt;
 Allows to randomize your starting maps and geyser locations until you find something you like.
@@ -30,5 +31,6 @@ The resource cost is optional, and can be disabled in the Options &gt; Mod Setti
 	</modDependencies>
 	<loadAfter>
 		<li>UnlimitedHugs.HugsLib</li>
+		<li>m00nl1ght.MapPreview</li>
 	</loadAfter>
 </ModMetaData>

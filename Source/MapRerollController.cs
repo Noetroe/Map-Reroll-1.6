@@ -85,14 +85,17 @@ namespace MapReroll {
 
 		private void ApplyDeterministicGenerationPatches() {
 			DeterministicGenerationPatcher.InstrumentMethodForDeterministicGeneration(
-				AccessTools.Method(GenTypes.GetTypeInAnyAssembly("Rimworld.BeachMaker"), "Init"),
+				AccessTools.Method(typeof(TileMutatorWorker_Coast), "Init"),
 				((Action<Map>)DeterministicGenerationPatcher.DeterministicBeachSetup).Method, HarmonyInst);
 			DeterministicGenerationPatcher.InstrumentMethodForDeterministicGeneration(
 				AccessTools.Method(typeof(TerrainPatchMaker), "Init"),
 				((Action<Map>)DeterministicGenerationPatcher.DeterministicPatchesSetup).Method, HarmonyInst);
 			DeterministicGenerationPatcher.InstrumentMethodForDeterministicGeneration(
-				AccessTools.Method(typeof(GenStep_Terrain), "GenerateRiver"),
+				AccessTools.Method(typeof(TileMutatorWorker_River), "Init"),
 				((Action<Map>)DeterministicGenerationPatcher.DeterministicRiverSetup).Method, HarmonyInst);
+			DeterministicGenerationPatcher.InstrumentMethodForDeterministicGeneration(
+				AccessTools.Method(typeof(TileMutatorWorker_Caves), "Init"),
+				((Action<Map>)DeterministicGenerationPatcher.DeterministicCavesSetup).Method, HarmonyInst);
 		}
 
 		public override void MapComponentsInitializing(Map map) {
@@ -125,7 +128,7 @@ namespace MapReroll {
 		}
 
 		public void RerollGeysers() {
-			geyserReroll.DoReroll();
+			if (!geyserReroll.DoReroll()) return;
 			if (PaidRerollsSetting) {
 				RerollToolbox.SubtractResourcePercentage(Find.CurrentMap, Resources.Settings.MapRerollSettings.geyserRerollCost);
 			}

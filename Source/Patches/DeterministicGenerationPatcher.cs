@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using HarmonyLib;
+using MapReroll.Compat;
 using Verse;
 
 namespace MapReroll.Patches {
@@ -9,7 +10,8 @@ namespace MapReroll.Patches {
 	/// </summary>
 	public static class DeterministicGenerationPatcher {
 		private const int DeterministicPatchPriority = 10;
-		private static bool generatorSeedPushed;
+		[ThreadStatic]
+		private static int generatorSeedPushDepth;
 
 		public static void InstrumentMethodForDeterministicGeneration(MethodInfo method, MethodInfo prefix, Harmony harmony) {
 			if (method == null) {
@@ -33,17 +35,22 @@ namespace MapReroll.Patches {
 			TryPushDeterministicRandState(map, 3);
 		}
 
+		public static void DeterministicCavesSetup(Map map) {
+			TryPushDeterministicRandState(map, 4);
+		}
+
 		private static void TryPushDeterministicRandState(Map map, int seed) {
+			if (Compat_MapPreview.IsGeneratingPreview) return;
 			if (MapRerollController.Instance.MapGeneratorModeSetting.Value == MapRerollController.MapGeneratorMode.AccuratePreviews) {
 				var deterministicSeed = Gen.HashCombineInt(GenText.StableStringHash(Find.World.info.seedString + seed), map.Tile);
 				Rand.PushState(deterministicSeed);
-				generatorSeedPushed = true;
+				generatorSeedPushDepth++;
 			}
 		}
 
 		private static void PopDeterministicRandState() {
-			if (generatorSeedPushed) {
-				generatorSeedPushed = false;
+			if (generatorSeedPushDepth > 0) {
+				generatorSeedPushDepth--;
 				Rand.PopState();
 			}
 		}
