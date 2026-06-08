@@ -189,8 +189,6 @@ namespace MapReroll {
 				foreach (var terrainPatchMaker in grids.Map.Biome.terrainPatchMakers) {
 					terrainPatchMaker.Cleanup();
 				}
-			} catch (Exception e) {
-				MapRerollController.Instance.Logger.ReportException(e, null, false, "preview generation");
 			} finally {
 				RockNoises.Reset();
 				Find.World.info.seedString = prevSeed;
@@ -344,6 +342,7 @@ namespace MapReroll {
 			map.regionGrid = new RegionGrid(map);
 			map.reachability = new Reachability(map);
 			map.regionDirtyer = new RegionDirtyer(map);
+			map.zoneManager = new ZoneManager(map);
 			map.glowGrid = new GlowGrid(map);
 			map.snowGrid = new SnowGrid(map);
 			map.fertilityGrid = new FertilityGrid(map);
@@ -352,7 +351,6 @@ namespace MapReroll {
 			if (ModsConfig.OdysseyActive) {
 				map.sandGrid = new SandGrid(map);
 				map.substructureGrid = new SubstructureGrid(map);
-				map.waterBodyTracker = new WaterBodyTracker(map);
 			}
 			return map;
 		}
