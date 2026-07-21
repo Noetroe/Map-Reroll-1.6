@@ -43,7 +43,7 @@ namespace MapReroll {
 				return false;
 			}
 			var state = RerollToolbox.GetStateForMap(map);
-			var mapGenerator = ResolveMapGenerator(map, state);
+			var mapGenerator = RerollToolbox.ResolveMapGenerator(map, state);
 			if (mapGenerator == null) {
 				logger.Error($"Cannot reroll geysers: map {map} does not have a recorded MapGeneratorDef");
 				return false;
@@ -62,14 +62,6 @@ namespace MapReroll {
 			var newGeysers = map.listerThings.AllThings.Where(t => t.def == geyserDef).Except(oldGeysers);
 			BeginGeyserSpawning(oldGeysers, newGeysers, map);
 			return true;
-		}
-
-		private static MapGeneratorDef ResolveMapGenerator(Map map, RerollMapState state) {
-			var mapGenerator = state.UsedMapGenerator ?? map.generatorDef ?? MapGeneratorDefOf.Base_Player;
-			if (state.UsedMapGenerator == null && mapGenerator != null) {
-				state.UsedMapGenerator = mapGenerator;
-			}
-			return mapGenerator;
 		}
 
 		private static GenStepDef FindGeyserGenStep(MapGeneratorDef mapGenerator, ThingDef geyserDef) {

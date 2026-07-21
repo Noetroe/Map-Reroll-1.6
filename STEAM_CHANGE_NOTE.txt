@@ -1,0 +1,10 @@
+Version 2.8.6 - Geological Landforms and preview compatibility
+
+- Fixed map previews appearing as black squares.
+- Fixed local preview generation when Map Preview is not enabled.
+- Added Geological Landforms support to generated previews and rerolled maps.
+- Preserved the current map size and map generator when generating previews or rerolling.
+- Added a local fallback when Map Preview rejects a request or returns a blank result.
+- Added explicit Harmony dependency and corrected the recommended load order.
+
+Recommended order: Harmony, Core/DLC, HugsLib, Map Preview (optional), Map Reroll, Geological Landforms (optional).

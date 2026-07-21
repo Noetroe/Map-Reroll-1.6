@@ -1,10 +1,23 @@
-[h1]Map Reroll (1.4/1.5/1.6)[/h1]
+[h1]Map Re-Reroll (1.6)[/h1]
 
-This update brings Map Reroll forward for RimWorld 1.6 while keeping support folders for 1.4 and 1.5.
+This is the updated RimWorld 1.6 version of Map Reroll. The original 1.4 and 1.5 content is still included for legacy players.
 
 Map Reroll lets you quickly randomize your starting map and steam geyser locations. Your starting scenario, colonists, items, and settlement setup stay the same.
 
 The mod includes map previews, so instead of blindly rolling random maps, you can browse preview pages and choose the map you want.
+
+[hr][/hr]
+
+[h1]Version 2.8.6 - Preview and Landform Update[/h1]
+
+[list]
+[*]Fixed map previews appearing as black squares.
+[*]Fixed fallback previews when Map Preview is not enabled.
+[*]Added Geological Landforms compatibility to previews and rerolled maps.
+[*]Uses the current map's actual size and map generator.
+[*]Falls back to Map Reroll's local preview generator if Map Preview rejects a request or returns a blank image.
+[*]Preserves Geological Landforms generation hooks in the local preview path.
+[/list]
 
 [hr][/hr]
 
@@ -24,6 +37,7 @@ The mod includes map previews, so instead of blindly rolling random maps, you ca
 [h1]Requirements[/h1]
 
 [list]
+[*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2009463077]Harmony[/url] is required and must load first.
 [*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=818773962]HugsLib[/url] is required.
 [*]Load HugsLib before Map Reroll.
 [*][url=https://steamcommunity.com/sharedfiles/filedetails/?id=2800857642]Map Preview[/url] is optional, but recommended for the best preview accuracy on RimWorld 1.6.
@@ -33,9 +47,12 @@ The mod includes map previews, so instead of blindly rolling random maps, you ca
 Suggested load order:
 
 [code]
+Harmony
+Core and DLC
 HugsLib
 Map Preview (optional)
 Map Reroll
+Geological Landforms (optional)
 [/code]
 
 [hr][/hr]
@@ -58,6 +75,8 @@ Use your best judgment when rerolling and save your game first.
 
 Map generation is one of RimWorld's more sensitive systems. This mod has been updated and tested around vanilla-style generation, but mods that add or change map generation may behave unexpectedly.
 
+Compatibility update: Map Reroll now uses the current map size and generator for previews, retries with its fallback preview generator when Map Preview rejects a request or returns a blank result, and lets Geological Landforms participate in fallback preview generation. If you use Geological Landforms, load it after Map Reroll.
+
 [hr][/hr]
 
 [h1]Legacy Versions[/h1]
@@ -75,5 +94,7 @@ Source code:
 
 Original Workshop item:
 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2915575236]Map Reroll (1.4/1.5)[/url]
+
+RimWorld 1.6 update by Noetroe / MoetroeLynx.
 
 Hope you enjoy.

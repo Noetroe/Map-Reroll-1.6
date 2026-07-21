@@ -11,19 +11,24 @@ This update brings the mod forward for RimWorld 1.6 while keeping the existing 1
 - Keep the same starting scenario, pawns, possessions, and settlement context.
 - Optional resource cost based on unmined resources on the map.
 - Optional Map Preview integration for more accurate RimWorld 1.6 preview generation.
+- Geological Landforms compatibility for generated previews and rerolled maps.
 
 ## Requirements
 
 - RimWorld 1.4, 1.5, or 1.6.
+- Harmony is required and must load first.
 - HugsLib is required and should load before Map Reroll.
 - Map Preview is optional, but recommended for the 1.6 preview generator path. If enabled, load Map Preview before Map Reroll.
 
 Suggested load order:
 
 ```text
+Harmony
+Core and DLC
 HugsLib
 Map Preview (optional)
 Map Reroll
+Geological Landforms (optional)
 ```
 
 ## How To Use
@@ -39,6 +44,10 @@ By default, generating preview pages and rerolling geysers costs a percentage of
 Save before rerolling. Map generation is a sensitive part of RimWorld, and mods that add, replace, or heavily alter map generation can behave unexpectedly.
 
 When Map Preview is loaded, Map Reroll uses Map Preview's preview pipeline and synchronizes the selected map seed with Map Preview's per-tile seed data. If Map Preview is not loaded, Map Reroll falls back to its internal preview generator.
+
+Geological Landforms should load after Map Reroll. The 1.6 fallback preview generator now runs through RimWorld's normal map-generation hook so landform terrain steps can participate, and Map Reroll falls back locally if Map Preview rejects a preview request.
+
+Version 2.8.6 also initializes fallback previews with a visible placeholder instead of a black texture, uses the current map's size and generator, and rejects blank results returned by Map Preview before retrying locally.
 
 ## Building
 
