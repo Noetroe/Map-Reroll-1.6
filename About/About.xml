@@ -1,14 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
 	<name>Map Reroll (1.4/1.5/1.6)</name>
-	<author>UnlimitedHugs and TheRealLemon</author>
+	<author>UnlimitedHugs, TheRealLemon, and Noetroe</author>
 	<supportedVersions>
 		<li>1.4</li>
 		<li>1.5</li>
 		<li>1.6</li>
 	</supportedVersions>
 	<packageId>TheRealLemon.MapReroll</packageId>
-	<description>Version: 2.8.5-rw1.6
+	<description>Version: 2.8.6-rw1.6
 	
 &lt;size=20&gt;Description&lt;/size&gt;
 Allows to randomize your starting maps and geyser locations until you find something you like.
@@ -20,8 +20,16 @@ Use "Reroll Map" to pick a new map from a list of previews, or "Reroll Geysers" 
 Each page of previews and geyser reroll operation will cost you an amount of unmined resources from the map- both the cost and the amount of remaining resources are displayed in the window.
 
 The resource cost is optional, and can be disabled in the Options &gt; Mod Settings menu.
+
+The RimWorld 1.6 update fixes black map previews, works with or without Map Preview, and adds Geological Landforms compatibility. When using Geological Landforms, load Map Reroll before it.
 </description>	
 	<modDependencies>
+		<li>
+			<packageId>brrainz.harmony</packageId>
+			<displayName>Harmony</displayName>
+			<downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+			<steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+		</li>
 		<li>
 			<packageId>UnlimitedHugs.HugsLib</packageId>
 			<displayName>HugsLib</displayName>
@@ -30,7 +38,11 @@ The resource cost is optional, and can be disabled in the Options &gt; Mod Setti
 		</li>
 	</modDependencies>
 	<loadAfter>
+		<li>brrainz.harmony</li>
 		<li>UnlimitedHugs.HugsLib</li>
 		<li>m00nl1ght.MapPreview</li>
 	</loadAfter>
+	<loadBefore>
+		<li>m00nl1ght.GeologicalLandforms</li>
+	</loadBefore>
 </ModMetaData>

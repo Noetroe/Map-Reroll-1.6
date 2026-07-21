@@ -29,6 +29,8 @@ namespace MapReroll.Compat {
 		private static MethodInfo copyToTextureMethod;
 		private static MethodInfo getSeedRerollDataMethod;
 		private static MethodInfo commitSeedMethod;
+		private static FieldInfo resultPixelsField;
+		private static PropertyInfo invalidCellsProperty;
 		private static PropertyInfo isReadyProperty;
 		private static PropertyInfo isGeneratingPreviewProperty;
 		private static PropertyInfo textureSizeProperty;
@@ -67,7 +69,7 @@ namespace MapReroll.Compat {
 			if (promise.CurState != PromiseState.Pending) return;
 
 			if (GetStaticBool(isReadyProperty)) {
-				if (!TryQueueReadyPreview(seed, mapTile, mapSize, generatorDef, promise)) {
+				if (!TryQueueReadyPreview(seed, mapTile, mapSize, generatorDef, promise, fallbackQueue)) {
 					fallbackQueue();
 				}
 				return;
@@ -84,7 +86,7 @@ namespace MapReroll.Compat {
 			);
 		}
 
-		private static bool TryQueueReadyPreview(string seed, int mapTile, int mapSize, MapGeneratorDef generatorDef, Promise<Texture2D> promise) {
+		private static bool TryQueueReadyPreview(string seed, int mapTile, int mapSize, MapGeneratorDef generatorDef, Promise<Texture2D> promise, Action fallbackQueue) {
 			try {
 				var generator = generatorInitMethod.Invoke(null, null);
 				if (generator == null) return false;
@@ -99,7 +101,7 @@ namespace MapReroll.Compat {
 				var mapPreviewPromise = queuePreviewRequestMethod.Invoke(generator, new[] {request});
 				if (mapPreviewPromise == null) return false;
 
-				var bridge = new PreviewPromiseBridge(promise, mapSize, copyToTextureMethod);
+				var bridge = new PreviewPromiseBridge(promise, mapSize, copyToTextureMethod, resultPixelsField, invalidCellsProperty, fallbackQueue);
 				var resolveDelegate = CreateResolveDelegate(bridge);
 				var doneMethod = mapPreviewPromise.GetType().GetMethod(
 					"Done",
@@ -138,6 +140,8 @@ namespace MapReroll.Compat {
 			useMinimalMapComponentsProperty = requestType.GetProperty("UseMinimalMapComponents", publicInstance);
 			generatorDefProperty = requestType.GetProperty("GeneratorDef", publicInstance);
 			copyToTextureMethod = resultType.GetMethod("CopyToTexture", publicInstance, null, new[] {typeof(Texture2D)}, null);
+			resultPixelsField = resultType.GetField("Pixels", publicInstance);
+			invalidCellsProperty = resultType.GetProperty("InvalidCells", publicInstance);
 			getSeedRerollDataMethod = seedRerollDataType.GetMethod("GetFor", publicStatic, null, new[] {typeof(World)}, null);
 			commitSeedMethod = seedRerollDataType.GetMethod("Commit", publicInstance, null, new[] {typeof(int), typeof(int), typeof(bool)}, null);
 
@@ -157,6 +161,17 @@ namespace MapReroll.Compat {
 				LogWarningOnce("Map Preview is loaded, but its preview API shape was not recognized. Map Reroll will use its own previews.");
 			}
 			return cacheValid;
+		}
+
+		public static void SetExternalPreviewGenerationActive(bool active) {
+			try {
+				const BindingFlags publicStatic = BindingFlags.Public | BindingFlags.Static;
+				apiType = apiType ?? FindType(MapPreviewApiTypeName);
+				isGeneratingPreviewProperty = isGeneratingPreviewProperty ?? apiType?.GetProperty("IsGeneratingPreview", publicStatic);
+				isGeneratingPreviewProperty?.GetSetMethod(true)?.Invoke(null, new object[] {active});
+			} catch {
+				// Optional compatibility signal only.
+			}
 		}
 
 		private static Type FindType(string typeName) {
@@ -201,30 +216,70 @@ namespace MapReroll.Compat {
 
 		private class PreviewPromiseBridge {
 			private readonly MethodInfo copyToTextureMethod;
+			private readonly Action fallbackQueue;
+			private readonly FieldInfo pixelsField;
+			private readonly PropertyInfo invalidCellsProperty;
 			private readonly int mapSize;
 			private readonly Promise<Texture2D> promise;
 
-			public PreviewPromiseBridge(Promise<Texture2D> promise, int mapSize, MethodInfo copyToTextureMethod) {
+			public PreviewPromiseBridge(Promise<Texture2D> promise, int mapSize, MethodInfo copyToTextureMethod, FieldInfo pixelsField, PropertyInfo invalidCellsProperty, Action fallbackQueue) {
 				this.promise = promise;
 				this.mapSize = mapSize;
 				this.copyToTextureMethod = copyToTextureMethod;
+				this.pixelsField = pixelsField;
+				this.invalidCellsProperty = invalidCellsProperty;
+				this.fallbackQueue = fallbackQueue;
 			}
 
 			public void Resolve(object result) {
 				HugsLibController.Instance.DoLater.DoNextUpdate(() => {
+					if (promise.CurState != PromiseState.Pending) return;
 					try {
+						if (ResultLooksBlank(result)) {
+							FallbackOrReject(new Exception("Map Preview returned a blank preview texture."));
+							return;
+						}
 						var texture = new Texture2D(mapSize, mapSize, TextureFormat.RGB24, false);
 						copyToTextureMethod.Invoke(result, new object[] {texture});
 						texture.Apply();
 						promise.Resolve(texture);
 					} catch (Exception e) {
-						promise.Reject(Unwrap(e));
+						FallbackOrReject(Unwrap(e));
 					}
 				});
 			}
 
 			public void Reject(Exception e) {
-				HugsLibController.Instance.DoLater.DoNextUpdate(() => promise.Reject(e));
+				HugsLibController.Instance.DoLater.DoNextUpdate(() => FallbackOrReject(e));
+			}
+
+			private void FallbackOrReject(Exception e) {
+				if (promise.CurState != PromiseState.Pending) return;
+				if (fallbackQueue != null) {
+					LogWarningOnce("Map Preview failed to generate a preview; Map Reroll will use its fallback preview generator. " + Unwrap(e).Message);
+					fallbackQueue();
+					return;
+				}
+				promise.Reject(e);
+			}
+
+			private bool ResultLooksBlank(object result) {
+				try {
+					if (invalidCellsProperty != null && (int)invalidCellsProperty.GetValue(result, null) > 0) {
+						return true;
+					}
+					var pixels = pixelsField?.GetValue(result) as Color[];
+					if (pixels == null || pixels.Length == 0) return false;
+					for (int i = 0; i < pixels.Length; i++) {
+						var pixel = pixels[i];
+						if (pixel != Color.black && pixel != Color.clear) {
+							return false;
+						}
+					}
+					return true;
+				} catch {
+					return false;
+				}
 			}
 		}
 	}

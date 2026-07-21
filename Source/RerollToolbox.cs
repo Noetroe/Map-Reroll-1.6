@@ -17,15 +17,15 @@ namespace MapReroll {
 	public static class RerollToolbox {
 		private const sbyte ThingMemoryState = -2;
 		private const sbyte ThingDiscardedState = -3;
+		private const int DefaultMapSize = 250;
 
 		public static void DoMapReroll(string seed = null) {
 			var oldMap = Find.CurrentMap;
-            WorldObjectDef worldObjectDef = oldMap.Parent.def;
-
-            if (oldMap == null) {
+			if (oldMap == null) {
 				MapRerollController.Instance.Logger.Error("No visible map- cannot reroll");
 				return;
 			}
+			WorldObjectDef worldObjectDef = oldMap.Parent.def;
 			LoadingMessages.SetCustomLoadingMessage(MapRerollController.Instance.LoadingMessagesSetting);
 			var oldParent = (MapParent)oldMap.ParentHolder;
 			var isOnStartingTile = MapIsOnStartingTile(oldMap, MapRerollController.Instance.WorldState);
@@ -34,6 +34,7 @@ namespace MapReroll {
 			if (isOnStartingTile) Current.Game.InitData = MakeInitData(MapRerollController.Instance.WorldState, oldMap);
 
 			var oldMapState = GetStateForMap(oldMap);
+			var rerollMapSize = ResolveRerollMapSize(oldMap);
 			var playerPawns = GetAllPlayerPawnsOnMap(oldMap); // includes animals
 			var colonists = GetAllColonistsOnMap(oldMap).ToList();
 			IEnumerable<Thing> nonGeneratedThings = ResolveThingsFromIds(oldMap, oldMapState.PlayerAddedThingIds).ToList();
@@ -74,7 +75,7 @@ namespace MapReroll {
 				MapRerollController.HasCavesOverride.OverrideEnabled = true;
 				MapRerollController.HasCavesOverride.HasCaves = Find.World.HasCaves(originalTile);
 
-                var newMap = GenerateNewMapWithSeed(newParent, Find.World.info.initialMapSize, mapSeed, worldObjectDef);
+				var newMap = GenerateNewMapWithSeed(newParent, rerollMapSize, mapSeed, worldObjectDef);
 				
 				var newMapState = GetStateForMap(newMap);
 				newMapState.RerollGenerated = true;
@@ -137,6 +138,27 @@ namespace MapReroll {
 				return null;
 			}
 			return comp.State ?? (comp.State = new RerollMapState());
+		}
+
+		public static MapGeneratorDef ResolveMapGenerator(Map map, RerollMapState state = null) {
+			if (map == null) return MapGeneratorDefOf.Base_Player;
+			state = state ?? GetStateForMap(map);
+			var mapGenerator = state?.UsedMapGenerator ?? map.generatorDef ?? MapGeneratorDefOf.Base_Player;
+			if (state != null && state.UsedMapGenerator == null && mapGenerator != null) {
+				state.UsedMapGenerator = mapGenerator;
+			}
+			return mapGenerator;
+		}
+
+		public static IntVec3 ResolveRerollMapSize(Map sourceMap) {
+			if (sourceMap != null && sourceMap.Size.x > 0 && sourceMap.Size.z > 0) {
+				return sourceMap.Size;
+			}
+			var worldSize = Find.World?.info?.initialMapSize ?? default;
+			if (worldSize.x > 0 && worldSize.z > 0) {
+				return worldSize;
+			}
+			return new IntVec3(DefaultMapSize, 1, DefaultMapSize);
 		}
 
 		public static void KillMapIntroDialog() {
@@ -377,24 +399,24 @@ namespace MapReroll {
 		}
 
 		private static GameInitData MakeInitData(RerollWorldState state, Map sourceMap) {
-            var colonists = GetAllColonistsOnMap(sourceMap).ToList();
+			var colonists = GetAllColonistsOnMap(sourceMap).ToList();
 
-            //Dictionary<Pawn, List<ThingDefCount>> sp = state.WorkAround(colonists, state.GetStartingPossessions());
-            Dictionary<Pawn, List<ThingDefCount>> sp = state.WorkAround(colonists);
+			//Dictionary<Pawn, List<ThingDefCount>> sp = state.WorkAround(colonists, state.GetStartingPossessions());
+			Dictionary<Pawn, List<ThingDefCount>> sp = state.WorkAround(colonists);
 
-            //state.crosscheck(colonists);
+			//state.crosscheck(colonists);
 
-            return new GameInitData {
-                permadeath = Find.GameInfo.permadeathMode,
-                mapSize = sourceMap.Size.x,
-                playerFaction = Faction.OfPlayer,
-                startingSeason = Season.Undefined,
-                startedFromEntry = true,
-                startingTile = state.StartingTile,
-                startingAndOptionalPawns = colonists,
-                startingPawnCount = colonists.Count,
-                startingPossessions = sp,
-            };
+			return new GameInitData {
+				permadeath = Find.GameInfo.permadeathMode,
+				mapSize = ResolveRerollMapSize(sourceMap).x,
+				playerFaction = Faction.OfPlayer,
+				startingSeason = Season.Undefined,
+				startedFromEntry = true,
+				startingTile = state.StartingTile,
+				startingAndOptionalPawns = colonists,
+				startingPawnCount = colonists.Count,
+				startingPossessions = sp,
+			};
 		}
 
 		private static bool MapIsOnStartingTile(Map map, RerollWorldState state) {

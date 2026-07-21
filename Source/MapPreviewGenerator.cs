@@ -56,19 +56,19 @@ namespace MapReroll {
 			}
 			var promise = new Promise<Texture2D>();
 			generatorDef = generatorDef ?? Find.Maps.Find(m => m.Tile == mapTile)?.generatorDef ?? MapGeneratorDefOf.Base_Player;
-			if (Compat_MapPreview.TryQueuePreviewForSeed(seed, mapTile, mapSize, generatorDef, promise, () => QueueLocalPreview(promise, seed, mapTile, mapSize, revealCaves))) {
+			if (Compat_MapPreview.TryQueuePreviewForSeed(seed, mapTile, mapSize, generatorDef, promise, () => QueueLocalPreview(promise, seed, mapTile, mapSize, revealCaves, generatorDef))) {
 				return promise;
 			}
-			QueueLocalPreview(promise, seed, mapTile, mapSize, revealCaves);
+			QueueLocalPreview(promise, seed, mapTile, mapSize, revealCaves, generatorDef);
 			return promise;
 		}
 
-		private void QueueLocalPreview(Promise<Texture2D> promise, string seed, int mapTile, int mapSize, bool revealCaves) {
+		private void QueueLocalPreview(Promise<Texture2D> promise, string seed, int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef) {
 			if (workerThread == null) {
 				workerThread = new Thread(DoThreadWork);
 				workerThread.Start();
 			}
-			queuedRequests.Enqueue(new QueuedPreviewRequest(promise, seed, mapTile, mapSize, revealCaves));
+			queuedRequests.Enqueue(new QueuedPreviewRequest(promise, seed, mapTile, mapSize, revealCaves, generatorDef));
 			workHandle.Set();
 		}
 
@@ -94,7 +94,8 @@ namespace MapReroll {
 								throw new Exception("Could not create required texture.");
 							}
 							placeholderTex = new ThreadableTexture(width, height);
-							GeneratePreviewForSeed(req.Seed, req.MapTile, req.MapSize, req.RevealCaves, placeholderTex);
+							placeholderTex.Fill(missingTerrainColor);
+							GeneratePreviewForSeed(req.Seed, req.MapTile, req.MapSize, req.RevealCaves, req.GeneratorDef, placeholderTex);
 						} catch (Exception e) {
 							MapRerollController.Instance.Logger.Error("Failed to generate map preview: " + e);
 							rejectException = e;
@@ -157,14 +158,15 @@ namespace MapReroll {
 			mainThreadHandle.WaitOne(1000);
 		}
 
-		private static void GeneratePreviewForSeed(string seed, int mapTile, int mapSize, bool revealCaves, ThreadableTexture texture) {
+		private static void GeneratePreviewForSeed(string seed, int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef, ThreadableTexture texture) {
 			var prevSeed = Find.World.info.seedString;
 
 			try {
 				MapRerollController.HasCavesOverride.HasCaves = Find.World.HasCaves(mapTile);
 				MapRerollController.HasCavesOverride.OverrideEnabled = true;
-                MapGeneratorDef generatorDef = Find.Maps.Find(m => m.Tile == mapTile).generatorDef;
+				generatorDef = generatorDef ?? Find.Maps.Find(m => m.Tile == mapTile)?.generatorDef ?? MapGeneratorDefOf.Base_Player;
 				Find.World.info.seedString = seed;
+				Compat_MapPreview.SetExternalPreviewGenerationActive(true);
 
 				MapRerollController.RandStateStackCheckingPaused = true;
 				var grids = GenerateMapGrids(mapTile, mapSize, revealCaves, generatorDef);
@@ -172,6 +174,10 @@ namespace MapReroll {
 				foreach (var cell in mapBounds) {
 					const float rockCutoff = .7f;
 					var terrainDef = grids.Map.terrainGrid.TerrainAt(cell);
+					if (terrainDef == null) {
+						texture.SetPixel(cell.x, cell.z, missingTerrainColor);
+						continue;
+					}
 					if (!terrainColors.TryGetValue(terrainDef.defName, out Color pixelColor)) {
 						pixelColor = missingTerrainColor;
 					}
@@ -194,6 +200,7 @@ namespace MapReroll {
 				Find.World.info.seedString = prevSeed;
 				MapRerollController.RandStateStackCheckingPaused = false;
 				MapRerollController.HasCavesOverride.OverrideEnabled = false;
+				Compat_MapPreview.SetExternalPreviewGenerationActive(false);
 			}
 		}
 
@@ -222,9 +229,10 @@ namespace MapReroll {
 		/// Generate a minimal map with elevation and fertility grids
 		/// </summary>
 		private static MapGridSet GenerateMapGrids(int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef) {
+			Dictionary<string, object> mapGeneratorData = null;
 			try {
 				Rand.PushState();
-				var mapGeneratorData = (Dictionary<string, object>)ReflectionCache.MapGenerator_Data.GetValue(null);
+				mapGeneratorData = (Dictionary<string, object>)ReflectionCache.MapGenerator_Data.GetValue(null);
 				mapGeneratorData.Clear();
 
 				var map = CreateMapStub(mapSize, mapTile, generatorDef);
@@ -237,23 +245,16 @@ namespace MapReroll {
 					mutator.Worker?.Init(map);
 				}
 
-				var genSteps = GetOrderedGenStepsFor(map, generatorDef);
-				for (int i = 0; i < genSteps.Count; i++) {
-					if (!IsPreviewTerrainGenStep(genSteps[i].def.genStep)) continue;
-					Rand.PushState();
-					try {
-						Rand.Seed = Gen.HashCombineInt(mapSeed, GetSeedPart(genSteps, i));
-						genSteps[i].def.genStep.Generate(map, genSteps[i].parms);
-					} finally {
-						Rand.PopState();
-					}
-				}
+				var genSteps = GetOrderedGenStepsFor(map, generatorDef)
+					.Where(step => IsPreviewTerrainGenStep(step.def.genStep))
+					.ToList();
+				MapGenerator.GenerateContentsIntoMap(genSteps, map, mapSeed);
 
 				var result = new MapGridSet(MapGenerator.Elevation, MapGenerator.Fertility, MapGenerator.Caves, map);
-				mapGeneratorData.Clear();
 
 				return result;
 			} finally {
+				mapGeneratorData?.Clear();
 				MapGenerator.mapBeingGenerated = null;
 				try {
 					Rand.PopState();
@@ -375,13 +376,15 @@ namespace MapReroll {
 			public readonly int MapTile;
 			public readonly int MapSize;
 			public readonly bool RevealCaves;
+			public readonly MapGeneratorDef GeneratorDef;
 
-			public QueuedPreviewRequest(Promise<Texture2D> promise, string seed, int mapTile, int mapSize, bool revealCaves) {
+			public QueuedPreviewRequest(Promise<Texture2D> promise, string seed, int mapTile, int mapSize, bool revealCaves, MapGeneratorDef generatorDef) {
 				Promise = promise;
 				Seed = seed;
 				MapTile = mapTile;
 				MapSize = mapSize;
 				RevealCaves = revealCaves;
+				GeneratorDef = generatorDef;
 			}
 		}
 
@@ -399,11 +402,17 @@ namespace MapReroll {
 			}
 
 			public void SetPixel(int x, int y, Color color) {
-				pixels[y * height + x] = color;
+				pixels[y * width + x] = color;
 			}
 
 			public Color GetPixel(int x, int y) {
-				return pixels[y * height + x];
+				return pixels[y * width + x];
+			}
+
+			public void Fill(Color color) {
+				for (int i = 0; i < pixels.Length; i++) {
+					pixels[i] = color;
+				}
 			}
 
 			public void CopyToTexture(Texture2D tex) {
