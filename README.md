@@ -49,6 +49,16 @@ Geological Landforms should load after Map Reroll. The 1.6 fallback preview gene
 
 Version 2.8.6 also initializes fallback previews with a visible placeholder instead of a black texture, uses the current map's size and generator, and rejects blank results returned by Map Preview before retrying locally.
 
+Version 2.8.7 limits map and geyser rerolls to vanilla player-home settlements. Scripted maps, quest sites, and unknown custom map parents are blocked so their mod-owned state cannot be invalidated. It also captures each map's central generation recipe and blocks destructive rerolls when the original request used custom extra GenSteps, a pre-content callback, pocket-map generation, or the step debugger. These transient inputs are classified instead of being enumerated or reconstructed later.
+
+The existing Setup Camp `CaravanCamp` integration remains supported, and selecting **Keep this map** is enforced by the execution path as well as the UI.
+
+Mods that provide a custom map parent verified to support full rerolls can opt in during initialization:
+
+```csharp
+MapRerollSafetyPolicy.RegisterSafeMapParentType(typeof(MyMapParent));
+```
+
 ## Building
 
 ```powershell

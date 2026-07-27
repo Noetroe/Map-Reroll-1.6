@@ -44,15 +44,8 @@ namespace MapReroll.UI {
 			get {
 				if (Current.ProgramState != ProgramState.Playing || Current.Game == null) return false;
 				var visibleMap = Current.Game.CurrentMap;
-                if (ModLister.GetActiveModWithIdentifier("syrchalis.setupcamp") != null)
-                {
-                    return visibleMap != null
-                        && (visibleMap.IsPlayerHome || (visibleMap.Parent.GetType().Name == "CaravanCamp"))
-                        && Find.World.renderer.wantedMode == WorldRenderMode.None
-                        && !MapWasCommitted(visibleMap);
-                }
 				return visibleMap != null
-						&& visibleMap.IsPlayerHome
+						&& MapRerollSafetyPolicy.CanReroll(visibleMap)
 						&& Find.World.renderer.wantedMode == WorldRenderMode.None
 						&& !MapWasCommitted(visibleMap);
 			}
@@ -61,7 +54,7 @@ namespace MapReroll.UI {
 		private bool MapWasCommitted(Map map) {
 			if (map != lastSeenMap) {
 				lastSeenMap = map;
-				lastSeenMapCommitted = RerollToolbox.GetStateForMap().MapCommitted;
+				lastSeenMapCommitted = RerollToolbox.GetStateForMap(map).MapCommitted;
 			}
 			return lastSeenMapCommitted;
 		}

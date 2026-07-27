@@ -1,5 +1,0 @@
-C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\MapReroll\Source\obj\1.5\MapReroll.csproj.AssemblyReference.cache
-C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\MapReroll\Source\obj\1.5\MapReroll.csproj.CoreCompileInputs.cache
-C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\MapReroll\1.5\Assemblies\MapReroll.dll
-C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\MapReroll\Source\obj\1.5\MapReroll.csproj.CopyComplete
-C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\MapReroll\Source\obj\1.5\MapReroll.dll

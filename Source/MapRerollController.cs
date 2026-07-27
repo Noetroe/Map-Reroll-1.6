@@ -123,8 +123,10 @@ namespace MapReroll {
 		}
 
 		public void RerollMap(string seed) {
+			var map = Find.CurrentMap;
+			if (!MapRerollSafetyPolicy.CheckAndNotify(map)) return;
 			rerollInProgress = true;
-			RerollToolbox.DoMapReroll(seed);
+			RerollToolbox.DoMapRerollUnchecked(map, seed);
 		}
 
 		public void RerollGeysers() {
@@ -155,10 +157,20 @@ namespace MapReroll {
 			pauseScheduled = true;
 		}
 
-		internal void OnMapGenerated(Map map, MapGeneratorDef usedMapGenerator) {
+		internal void OnMapGenerated(Map map, MapGeneratorDef usedMapGenerator, MapGenerationRecipeCapture recipe) {
 			RerollToolbox.StoreGeneratedThingIdsInMapState(map);
 			var mapState = RerollToolbox.GetStateForMap(map);
 			mapState.UsedMapGenerator = usedMapGenerator;
+			mapState.GenerationRecipeCaptured = recipe != null;
+			if (recipe != null) {
+				mapState.GenerationMapSize = recipe.MapSize;
+				mapState.GenerationParentRuntimeType = recipe.ParentRuntimeType;
+				mapState.GenerationParentDefName = recipe.ParentDefName;
+				mapState.GenerationHadExtraGenSteps = recipe.HasExtraGenSteps;
+				mapState.GenerationHadPreContentCallback = recipe.HasPreContentCallback;
+				mapState.GenerationWasPocketMap = recipe.IsPocketMap;
+				mapState.GenerationUsedStepDebugger = recipe.StepDebugger;
+			}
 			if (!rerollInProgress) {
 				mapState.ResourceBalance = MaxResourceBalance;
 			}
