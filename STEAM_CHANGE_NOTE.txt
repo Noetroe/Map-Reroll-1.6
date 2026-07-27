@@ -1,10 +1,11 @@
-Version 2.8.6 - Geological Landforms and preview compatibility
+Version 2.8.7 - Safer compatibility
 
-- Fixed map previews appearing as black squares.
-- Fixed local preview generation when Map Preview is not enabled.
-- Added Geological Landforms support to generated previews and rerolled maps.
-- Preserved the current map size and map generator when generating previews or rerolling.
-- Added a local fallback when Map Preview rejects a request or returns a blank result.
-- Added explicit Harmony dependency and corrected the recommended load order.
+- Blocks map and geyser rerolls on quest sites, scripted maps, and unknown custom map parents.
+- Captures the central map-generation recipe and blocks rerolls that used custom GenSteps, callbacks, pocket-map generation, or the step debugger.
+- Keeps normal vanilla player-home settlements and the existing Setup Camp integration rerollable.
+- Prevents direct API calls from rerolling a map after the player selects "Keep this map."
+- Removed aggressive cleanup that manually cleared old MapComponents, region data, and map grids.
+- Added a small opt-in API for custom map parents that have verified full-reroll support.
+- Retains the 2.8.6 black-preview, Map Preview, and Geological Landforms fixes.
 
-Recommended order: Harmony, Core/DLC, HugsLib, Map Preview (optional), Map Reroll, Geological Landforms (optional).
+Validated on RimWorld 1.6 with Vanilla Expanded Framework, Vanilla Factions Expanded - Insectoids 2, Geological Landforms, and Map Preview disabled.

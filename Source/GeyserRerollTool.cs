@@ -34,6 +34,7 @@ namespace MapReroll {
 		public bool DoReroll() {
 			var map = Find.CurrentMap;
 			var logger = MapRerollController.Instance.Logger;
+			if (!MapRerollSafetyPolicy.CheckAndNotify(map)) return false;
 			if (RerollInProgress) {
 				logger.Error("Cannot reroll geysers- reroll already in progress");
 				return false;

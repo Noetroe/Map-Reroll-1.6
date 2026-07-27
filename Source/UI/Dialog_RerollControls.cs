@@ -51,8 +51,12 @@ namespace MapReroll.UI {
 		
 		public override void DoWindowContents(Rect inRect) {
 			// close on world map, on committed maps
-			var mapState = RerollToolbox.GetStateForMap();
-			if (Find.World.renderer.wantedMode != WorldRenderMode.None || Find.CurrentMap == null || mapState.MapCommitted) {
+			var map = Find.CurrentMap;
+			var mapState = map == null ? null : RerollToolbox.GetStateForMap(map);
+			if (Find.World.renderer.wantedMode != WorldRenderMode.None
+				|| !MapRerollSafetyPolicy.CanReroll(map)
+				|| mapState == null
+				|| mapState.MapCommitted) {
 				Close();
 				return;
 			}

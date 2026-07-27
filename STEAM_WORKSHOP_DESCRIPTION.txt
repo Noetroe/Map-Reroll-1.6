@@ -8,9 +8,14 @@ The mod includes map previews, so instead of blindly rolling random maps, you ca
 
 [hr][/hr]
 
-[h1]Version 2.8.6 - Preview and Landform Update[/h1]
+[h1]Version 2.8.7 - Safer Compatibility[/h1]
 
 [list]
+[*]Blocks rerolls on quest sites, scripted maps, and unknown custom map parents.
+[*]Protects mod-owned MapComponents, region data, and map state during old-map cleanup.
+[*]Captures map-generation recipe provenance and blocks rerolls that cannot be replayed safely.
+[*]Prevents direct reroll calls after selecting "Keep this map."
+[*]Retains the existing Setup Camp integration.
 [*]Fixed map previews appearing as black squares.
 [*]Fixed fallback previews when Map Preview is not enabled.
 [*]Added Geological Landforms compatibility to previews and rerolled maps.
@@ -75,7 +80,9 @@ Use your best judgment when rerolling and save your game first.
 
 Map generation is one of RimWorld's more sensitive systems. This mod has been updated and tested around vanilla-style generation, but mods that add or change map generation may behave unexpectedly.
 
-Compatibility update: Map Reroll now uses the current map size and generator for previews, retries with its fallback preview generator when Map Preview rejects a request or returns a blank result, and lets Geological Landforms participate in fallback preview generation. If you use Geological Landforms, load it after Map Reroll.
+Compatibility update: Map Reroll only enables map and geyser rerolls on vanilla player-home settlements and its existing Setup Camp integration. Quest sites, scripted maps, and unknown custom map parents are blocked before destructive operations begin. Map Reroll records the central map-generation request and also blocks recipes that used custom extra GenSteps, a pre-content callback, pocket-map generation, or the step debugger. It classifies those transient inputs rather than consuming or reconstructing them later. The selected map is still generated through RimWorld's normal map pipeline so active mod GenSteps and MapComponents can initialize normally.
+
+Map Reroll uses the current map size and generator for previews, retries with its fallback preview generator when Map Preview rejects a request or returns a blank result, and lets Geological Landforms participate in fallback preview generation. If you use Geological Landforms, load it after Map Reroll.
 
 [hr][/hr]
 

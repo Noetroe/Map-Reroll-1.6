@@ -6,6 +6,11 @@
 	<Reroll2_commitMap>Keep this map</Reroll2_commitMap>
 	<Reroll2_commitMap_tip>Confirm this map, and hide the reroll controls.</Reroll2_commitMap_tip>
 	<Reroll2_rerollInProgress>Reroll already in progress.</Reroll2_rerollInProgress>
+	<Reroll2_unsafeMap_noMap>There is no active map to reroll.</Reroll2_unsafeMap_noMap>
+	<Reroll2_unsafeMap_notPlayerHome>Map Reroll is only available on player-home settlement maps.</Reroll2_unsafeMap_notPlayerHome>
+	<Reroll2_unsafeMap_customParent>This map uses a custom or scripted map parent and cannot be safely rerolled.</Reroll2_unsafeMap_customParent>
+	<Reroll2_unsafeMap_customRecipe>This map was created with custom one-time generation data and cannot be safely rerolled.</Reroll2_unsafeMap_customRecipe>
+	<Reroll2_unsafeMap_committed>Rerolls are disabled because this map has already been kept.</Reroll2_unsafeMap_committed>
 	<Reroll2_costSuffix> ({0}%)</Reroll2_costSuffix>
 	
 	<Reroll2_remainingResources>Remaining map resources: {0}%</Reroll2_remainingResources>

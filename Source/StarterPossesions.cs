@@ -7,7 +7,6 @@ namespace MapReroll
     [Serializable]
     class StarterPossesions : IExposable
     {
-        //public List<ThingDefCount> StartingPossessions { get; set; }
         public List<ThingDefCount> StartingPossessions { get => startingPossessions; set => startingPossessions = value; }
         private List<ThingDefCount> startingPossessions;
         public StarterPossesions()
