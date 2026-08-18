@@ -8,7 +8,7 @@
 		<li>1.6</li>
 	</supportedVersions>
 	<packageId>TheRealLemon.MapReroll</packageId>
-	<description>Version: 2.8.7-rw1.6
+	<description>Version: 2.8.8-rw1.6
 	
 &lt;size=20&gt;Description&lt;/size&gt;
 Allows to randomize your starting maps and geyser locations until you find something you like.
@@ -21,7 +21,7 @@ Each page of previews and geyser reroll operation will cost you an amount of unm
 
 The resource cost is optional, and can be disabled in the Options &gt; Mod Settings menu.
 
-The RimWorld 1.6 update fixes black map previews, works with or without Map Preview, and adds Geological Landforms compatibility. Version 2.8.7 also blocks rerolls on scripted, quest, and unknown custom maps so mod-owned map state is not invalidated. When using Geological Landforms, load Map Reroll before it.
+The RimWorld 1.6 update fixes black map previews, works with or without Map Preview, and adds Geological Landforms compatibility. Version 2.8.7 also blocks rerolls on scripted, quest, and unknown custom maps so mod-owned map state is not invalidated. Version 2.8.8 keeps the Biotech mechanitor exostrider wreck available when refreshing the starting map. When using Geological Landforms, load Map Reroll before it.
 </description>	
 	<modDependencies>
 		<li>

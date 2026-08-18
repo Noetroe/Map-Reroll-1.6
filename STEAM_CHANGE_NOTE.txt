@@ -1,11 +1,14 @@
-Version 2.8.7 - Safer compatibility
+Version 2.8.8 - Mechanitor quest fix
 
+- Keeps Biotech's ancient exostrider wreck available after refreshing the starting map.
+- Prevents map replacement from falsely marking the mechanitor datacore opportunity as permanently abandoned.
+- Only suppresses that abandonment notification during an active starting-map replacement; normal destruction, decryption, and loss keep vanilla behavior.
 - Blocks map and geyser rerolls on quest sites, scripted maps, and unknown custom map parents.
 - Captures the central map-generation recipe and blocks rerolls that used custom GenSteps, callbacks, pocket-map generation, or the step debugger.
 - Keeps normal vanilla player-home settlements and the existing Setup Camp integration rerollable.
 - Prevents direct API calls from rerolling a map after the player selects "Keep this map."
 - Removed aggressive cleanup that manually cleared old MapComponents, region data, and map grids.
 - Added a small opt-in API for custom map parents that have verified full-reroll support.
-- Retains the 2.8.6 black-preview, Map Preview, and Geological Landforms fixes.
+- Retains the 2.8.7 map-safety changes and the 2.8.6 black-preview, Map Preview, and Geological Landforms fixes.
 
-Validated on RimWorld 1.6 with Vanilla Expanded Framework, Vanilla Factions Expanded - Insectoids 2, Geological Landforms, and Map Preview disabled.
+Validated on RimWorld 1.6 with Biotech, Map Preview enabled, Geological Landforms, and repeated starting-map rerolls.

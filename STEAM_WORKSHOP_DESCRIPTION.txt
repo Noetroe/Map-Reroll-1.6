@@ -8,9 +8,11 @@ The mod includes map previews, so instead of blindly rolling random maps, you ca
 
 [hr][/hr]
 
-[h1]Version 2.8.7 - Safer Compatibility[/h1]
+[h1]Version 2.8.8 - Mechanitor Quest Fix[/h1]
 
 [list]
+[*]Keeps Biotech's ancient exostrider wreck available when refreshing the starting map.
+[*]Avoids falsely marking the mechanitor datacore opportunity as abandoned during map replacement.
 [*]Blocks rerolls on quest sites, scripted maps, and unknown custom map parents.
 [*]Protects mod-owned MapComponents, region data, and map state during old-map cleanup.
 [*]Captures map-generation recipe provenance and blocks rerolls that cannot be replayed safely.
