@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HugsLib;
 using MapReroll.Compat;
+using MapReroll.Patches;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -55,7 +56,12 @@ namespace MapReroll {
 				}
 				DespawnThings(playerPawns.ExceptNull(), oldMap);
 				DespawnThings(nonGeneratedThings, oldMap);
-				DiscardFactionBase(oldParent);
+				if (isOnStartingTile) {
+					Building_AncientMechRemains_Notify_AbandonedAtTile_Patch.DuringStartingMapReplacement(
+						() => DiscardFactionBase(oldParent));
+				} else {
+					DiscardFactionBase(oldParent);
+				}
 			}, "GeneratingMap", false, GameAndMapInitExceptionHandlers.ErrorWhileGeneratingMap);
 
 			// generate new map in work thread

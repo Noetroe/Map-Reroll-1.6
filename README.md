@@ -51,6 +51,8 @@ Version 2.8.6 also initializes fallback previews with a visible placeholder inst
 
 Version 2.8.7 limits map and geyser rerolls to vanilla player-home settlements. Scripted maps, quest sites, and unknown custom map parents are blocked so their mod-owned state cannot be invalidated. It also captures each map's central generation recipe and blocks destructive rerolls when the original request used custom extra GenSteps, a pre-content callback, pocket-map generation, or the step debugger. These transient inputs are classified instead of being enumerated or reconstructed later.
 
+Version 2.8.8 prevents removal of the starting map from falsely marking Biotech's ancient exostrider wreck as permanently abandoned. The normal Biotech GenStep can therefore place the complete mechanitor quest wreck on the selected replacement map. Destroying the wreck or losing its transponder outside a reroll keeps vanilla behavior.
+
 The existing Setup Camp `CaravanCamp` integration remains supported, and selecting **Keep this map** is enforced by the execution path as well as the UI.
 
 Mods that provide a custom map parent verified to support full rerolls can opt in during initialization:
